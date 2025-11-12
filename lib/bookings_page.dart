@@ -11,7 +11,53 @@ class BookingsPage extends StatefulWidget {
   State<BookingsPage> createState() => _BookingsPageState();
 }
 
-class _BookingsPageState extends State<BookingsPage> {
+class _BookingsPageState extends State<BookingsPage>
+    with SingleTickerProviderStateMixin {
+  late TabController _tabController;
+
+  @override
+  void initState() {
+    super.initState();
+    _tabController = TabController(length: 2, vsync: this);
+  }
+
+  @override
+  void dispose() {
+    _tabController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        TabBar(
+          controller: _tabController,
+          labelColor: AppTheme.accent,
+          unselectedLabelColor: AppTheme.lightText,
+          indicatorColor: AppTheme.accent,
+          tabs: const [
+            Tab(text: 'Upcoming'),
+            Tab(text: 'Completed'),
+          ],
+        ),
+        Expanded(
+          child: TabBarView(
+            controller: _tabController,
+            children: [
+              _OrderList(isUpcoming: true),
+              _OrderList(isUpcoming: false),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _OrderList extends StatelessWidget {
+  final bool isUpcoming;
+  const _OrderList({required this.isUpcoming});
   Future<void> _cancelBooking(BuildContext context, String orderId) async {
     final bool? confirm = await showDialog(
       context: context,
@@ -33,10 +79,15 @@ class _BookingsPageState extends State<BookingsPage> {
 
     if (confirm == true) {
       try {
+        final user = FirebaseAuth.instance.currentUser;
+        if (user == null) return;
         await FirebaseFirestore.instance
+            .collection('users')
+            .doc(user.uid)
             .collection('orders')
             .doc(orderId)
             .delete();
+            
         if (context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
@@ -63,11 +114,19 @@ class _BookingsPageState extends State<BookingsPage> {
       return const Center(child: Text('Please log in to see your orders.'));
     }
     Query query = FirebaseFirestore.instance
-        .collection('orders')
-        .where('userId', isEqualTo: user.uid)
-        .orderBy('createdAt', descending: true); 
-    print('Current UID: ${user.uid}');
-    print('Firestore Project: ${FirebaseFirestore.instance.app.options.projectId}');
+        .collection('users')
+        .doc(user.uid)
+        .collection('orders');
+
+    if (isUpcoming) {
+      query = query
+          .where('scheduledAt', isGreaterThanOrEqualTo: Timestamp.now())
+          .orderBy('scheduledAt', descending: false);
+    } else {
+      query = query
+          .where('scheduledAt', isLessThan: Timestamp.now())
+          .orderBy('scheduledAt', descending: true);
+    }
 
     return StreamBuilder<QuerySnapshot>(
       stream: query.snapshots(),
@@ -75,24 +134,21 @@ class _BookingsPageState extends State<BookingsPage> {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Center(child: CircularProgressIndicator());
         }
-
-        // --- THIS WILL SHOW THE REAL ERROR ---
+        
         if (snapshot.hasError) {
           return Center(
               child: Padding(
-            padding: const EdgeInsets.all(24.0),
+            padding: const EdgeInsets.all(16.0),
             child: Text(
-              'Error:\n\n${snapshot.error}', // Show the actual error
-              textAlign: TextAlign.center,
-              style: AppTheme.textTheme.bodyMedium?.copyWith(color: Colors.red),
-            ),
+                'Error: ${snapshot.error}', // This will show any error
+                textAlign: TextAlign.center,
+                style: AppTheme.textTheme.bodyMedium),
           ));
         }
-
         if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
           return Center(
             child: Text(
-              'You have no orders.',
+              'You have no ${isUpcoming ? 'upcoming' : 'completed'} orders.',
               style: AppTheme.textTheme.bodyMedium,
             ),
           );
@@ -105,16 +161,13 @@ class _BookingsPageState extends State<BookingsPage> {
           itemCount: orders.length,
           itemBuilder: (context, index) {
             final orderData = orders[index].data() as Map<String, dynamic>;
-            final orderId = orders[index].id;
+            final orderId = orders[index].id; 
 
             final Timestamp scheduledTimestamp = orderData['scheduledAt'];
             final String formattedDate =
                 DateFormat('EEE, MMM d, yyyy').format(scheduledTimestamp.toDate());
             final String formattedTime =
                 DateFormat('h:mm a').format(scheduledTimestamp.toDate());
-
-            final bool isCompleted =
-                scheduledTimestamp.toDate().isBefore(DateTime.now());
 
             return Card(
               margin: const EdgeInsets.only(bottom: 12),
@@ -126,16 +179,16 @@ class _BookingsPageState extends State<BookingsPage> {
                 ),
                 subtitle: Text('$formattedDate at $formattedTime',
                     style: AppTheme.textTheme.bodyMedium),
-                trailing: !isCompleted 
+                trailing: isUpcoming
                     ? TextButton(
                         child: const Text('Cancel',
                             style: TextStyle(color: Colors.red)),
                         onPressed: () => _cancelBooking(context, orderId),
                       )
                     : Text(
-                        'Completed',
-                        style: AppTheme.textTheme.bodyMedium
-                            ?.copyWith(color: Colors.green),
+                        '₹${(orderData['price'] as num).toStringAsFixed(0)}',
+                        style: AppTheme.textTheme.titleMedium
+                            ?.copyWith(color: AppTheme.darkText),
                       ),
               ),
             );
