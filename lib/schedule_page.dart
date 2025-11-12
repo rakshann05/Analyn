@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'main.dart'; 
+import 'package:intl/intl.dart'; 
+import 'main.dart';
 import 'payment_page.dart';
 import 'add_address_page.dart';
-import 'app_theme.dart'; 
+import 'app_theme.dart';
 
 class SchedulePage extends StatefulWidget {
   final Service service;
@@ -19,6 +20,7 @@ class _SchedulePageState extends State<SchedulePage> {
   DateTime? _selectedDate;
   TimeOfDay? _selectedTime;
   String? _selectedAddressId;
+  String _selectedAddressText = '';
 
   Future<void> _selectDate(BuildContext context) async {
     final DateTime? picked = await showDatePicker(
@@ -30,14 +32,17 @@ class _SchedulePageState extends State<SchedulePage> {
         return Theme(
           data: ThemeData.light().copyWith(
             colorScheme: const ColorScheme.light(
-              primary: AppTheme.accent, 
+              primary: AppTheme.accent,
             ),
+            dialogBackgroundColor: AppTheme.background,
           ),
           child: child!,
         );
       },
     );
-    if (picked != null && picked != _selectedDate) setState(() => _selectedDate = picked);
+    if (picked != null && picked != _selectedDate) {
+      setState(() => _selectedDate = picked);
+    }
   }
 
   Future<void> _selectTime(BuildContext context) async {
@@ -48,30 +53,40 @@ class _SchedulePageState extends State<SchedulePage> {
         return Theme(
           data: ThemeData.light().copyWith(
             colorScheme: const ColorScheme.light(
-              primary: AppTheme.accent,
+              primary: AppTheme.accent, 
             ),
+            dialogBackgroundColor: AppTheme.background,
           ),
           child: child!,
         );
       },
     );
-    if (picked != null && picked != _selectedTime) setState(() => _selectedTime = picked);
+    if (picked != null && picked != _selectedTime) {
+      setState(() => _selectedTime = picked);
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     final user = FirebaseAuth.instance.currentUser;
-    final bool canContinue = _selectedDate != null && _selectedTime != null && _selectedAddressId != null;
+    final bool canContinue = _selectedDate != null &&
+        _selectedTime != null &&
+        _selectedAddressId != null;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Schedule Appointment')),
+      backgroundColor: AppTheme.background, 
+      appBar: AppBar(
+        title: Text('Schedule Appointment', style: AppTheme.textTheme.headlineMedium),
+        backgroundColor: AppTheme.background,
+        elevation: 0,
+        foregroundColor: AppTheme.darkText,
+      ),
       body: Column(
         children: [
           Expanded(
             child: ListView(
               padding: const EdgeInsets.all(16.0),
               children: [
-                // --- Service Summary Card ---
                 Card(
                   child: Padding(
                     padding: const EdgeInsets.all(12.0),
@@ -91,7 +106,8 @@ class _SchedulePageState extends State<SchedulePage> {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text(widget.service.name, style: AppTheme.textTheme.titleMedium),
+                              Text(widget.service.name,
+                                  style: AppTheme.textTheme.titleMedium),
                               const SizedBox(height: 4),
                               Text(
                                 '${widget.service.duration}  •  ₹${widget.service.price.toStringAsFixed(0)}',
@@ -105,92 +121,133 @@ class _SchedulePageState extends State<SchedulePage> {
                   ),
                 ),
                 const SizedBox(height: 24),
-                Text('Select Date & Time', style: AppTheme.textTheme.headlineMedium?.copyWith(fontSize: 20)),
-                const SizedBox(height: 12),
-                ListTile(
-                  leading: const Icon(Icons.calendar_today_outlined, color: AppTheme.accent),
-                  title: const Text('Select Date'),
-                  subtitle: Text(_selectedDate == null ? 'No date chosen' : '${_selectedDate!.toLocal()}'.split(' ')[0]),
-                  onTap: () => _selectDate(context),
+                _buildSectionHeader('Select Date & Time'),
+                Card(
+                  child: Column(
+                    children: [
+                      ListTile(
+                        leading: const Icon(Icons.calendar_today_outlined,
+                            color: AppTheme.accent),
+                        title: const Text('Select Date'),
+                        subtitle: Text(
+                          _selectedDate == null
+                              ? 'No date chosen'
+                              : DateFormat('EEE, MMM d, yyyy').format(_selectedDate!),
+                          style: AppTheme.textTheme.bodyMedium?.copyWith(
+                            color: _selectedDate == null ? AppTheme.lightText : AppTheme.darkText,
+                          ),
+                        ),
+                        onTap: () => _selectDate(context),
+                      ),
+                      const Divider(height: 1, indent: 16, endIndent: 16),
+                      ListTile(
+                        leading: const Icon(Icons.access_time_outlined,
+                            color: AppTheme.accent),
+                        title: const Text('Select Time'),
+                        subtitle: Text(
+                          _selectedTime == null
+                              ? 'No time chosen'
+                              : _selectedTime!.format(context),
+                          style: AppTheme.textTheme.bodyMedium?.copyWith(
+                            color: _selectedTime == null ? AppTheme.lightText : AppTheme.darkText,
+                          ),
+                        ),
+                        onTap: () => _selectTime(context),
+                      ),
+                    ],
+                  ),
                 ),
-                const Divider(),
-                ListTile(
-                  leading: const Icon(Icons.access_time_outlined, color: AppTheme.accent),
-                  title: const Text('Select Time'),
-                  subtitle: Text(_selectedTime == null ? 'No time chosen' : _selectedTime!.format(context)),
-                  onTap: () => _selectTime(context),
-                ),
-                const SizedBox(height: 24),             
-                Text('Select Address', style: AppTheme.textTheme.headlineMedium?.copyWith(fontSize: 20)),
-                const SizedBox(height: 12),
+                const SizedBox(height: 24),
+                _buildSectionHeader('Select Address'),
                 StreamBuilder<QuerySnapshot>(
-                  stream: FirebaseFirestore.instance.collection('users').doc(user!.uid).collection('addresses').snapshots(),
+                  stream: FirebaseFirestore.instance
+                      .collection('users')
+                      .doc(user!.uid)
+                      .collection('addresses')
+                      .snapshots(),
                   builder: (context, snapshot) {
-                    if (!snapshot.hasData) return const Center(child: CircularProgressIndicator());
-                    
+                    if (!snapshot.hasData) {
+                      return const Center(child: CircularProgressIndicator());
+                    }
+
                     final addresses = snapshot.data!.docs;
 
-                    return Column(
-                      children: [
-                        ...addresses.map((addressDoc) {
-                          final addressData = addressDoc.data() as Map<String, dynamic>;
-                          final fullAddress = '${addressData['fullAddress']}, ${addressData['city']}';
-                          return RadioListTile<String>(
-                            title: Text(addressData['type'] ?? 'Address', style: AppTheme.textTheme.titleMedium?.copyWith(fontSize: 16)),
-                            subtitle: Text(fullAddress, style: AppTheme.textTheme.bodyMedium),
-                            value: addressDoc.id,
-                            groupValue: _selectedAddressId,
-                            onChanged: (value) => setState(() => _selectedAddressId = value),
-                            activeColor: AppTheme.accent,
-                          );
-                        }).toList(),
-                        ListTile(
-                          leading: Icon(Icons.add_location_alt_outlined, color: AppTheme.accent),
-                          title: Text('Add a New Address', style: AppTheme.textTheme.bodyLarge?.copyWith(color: AppTheme.accent)),
-                          onTap: () async {
-                             // Wait for the page to pop, then check for new addresses
-                            await Navigator.of(context).push(MaterialPageRoute(builder: (context) => const AddAddressPage()));
-                            setState(() {
-                            });
-                          },
-                        ),
-                      ],
+                    return Card(
+                      child: Column(
+                        children: [
+                          ...addresses.map((addressDoc) {
+                            final addressData =
+                                addressDoc.data() as Map<String, dynamic>;
+                            final fullAddress =
+                                '${addressData['fullAddress']}, ${addressData['city']}';
+                            return RadioListTile<String>(
+                              title: Text(
+                                  addressData['type'] ?? 'Address',
+                                  style: AppTheme.textTheme.titleMedium
+                                      ?.copyWith(fontSize: 16)),
+                              subtitle: Text(fullAddress,
+                                  style: AppTheme.textTheme.bodyMedium),
+                              value: addressDoc.id,
+                              groupValue: _selectedAddressId,
+                              onChanged: (value) => setState(() {
+                                _selectedAddressId = value;
+                                _selectedAddressText = fullAddress; 
+                              }),
+                              activeColor: AppTheme.accent,
+                            );
+                          }).toList(),
+                          const Divider(height: 1, indent: 16, endIndent: 16),
+                          ListTile(
+                            leading: Icon(Icons.add_location_alt_outlined,
+                                color: AppTheme.accent),
+                            title: Text('Add a New Address',
+                                style: AppTheme.textTheme.bodyLarge
+                                    ?.copyWith(color: AppTheme.accent)),
+                            onTap: () async {
+                              await Navigator.of(context).push(MaterialPageRoute(
+                                  builder: (context) => const AddAddressPage()));
+                            },
+                          ),
+                        ],
+                      ),
                     );
                   },
                 ),
               ],
             ),
           ),
-          Padding(
+          Container(
             padding: const EdgeInsets.all(16.0),
+            color: AppTheme.background, 
             child: ElevatedButton(
-              onPressed: canContinue ? () async {
-                final addressSnapshot = await FirebaseFirestore.instance
-                    .collection('users')
-                    .doc(user.uid)
-                    .collection('addresses')
-                    .doc(_selectedAddressId)
-                    .get();
-                
-                final addressData = addressSnapshot.data() as Map<String, dynamic>;
-                final fullAddress = '${addressData['fullAddress']}, ${addressData['city']}, ${addressData['postalCode']}';
-
-                if(mounted) {
-                  Navigator.of(context).push(
-                    MaterialPageRoute(builder: (context) => PaymentPage(
-                        service: widget.service,
-                        scheduledDate: _selectedDate!,
-                        scheduledTime: _selectedTime!,
-                        deliveryAddress: fullAddress,
-                      ),
-                    ),
-                  );
-                }
-              } : null,
+              onPressed: canContinue
+                  ? () {
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (context) => PaymentPage(
+                            service: widget.service,
+                            scheduledDate: _selectedDate!,
+                            scheduledTime: _selectedTime!,
+                            deliveryAddress: _selectedAddressText,
+                          ),
+                        ),
+                      );
+                    }
+                  : null, 
               child: const Text('Continue'),
             ),
           ),
         ],
+      ),
+    );
+  }
+  Widget _buildSectionHeader(String title) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12.0),
+      child: Text(
+        title,
+        style: AppTheme.textTheme.headlineMedium
+            ?.copyWith(color: AppTheme.lightText),
       ),
     );
   }
