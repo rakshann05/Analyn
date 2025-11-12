@@ -140,7 +140,7 @@ class _OrderList extends StatelessWidget {
               child: Padding(
             padding: const EdgeInsets.all(16.0),
             child: Text(
-                'Error: ${snapshot.error}', // This will show any error
+                'Error: ${snapshot.error}', 
                 textAlign: TextAlign.center,
                 style: AppTheme.textTheme.bodyMedium),
           ));

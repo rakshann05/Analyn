@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:intl/intl.dart';
-import 'package:flutter/services.dart'; // Import for input formatters
+import 'package:flutter/services.dart'; 
 import 'app_theme.dart';
-import 'main.dart'; // Import for the Service class
+import 'main.dart'; 
 
 class PaymentPage extends StatefulWidget {
   final Service service;
@@ -40,9 +40,8 @@ class _PaymentPageState extends State<PaymentPage> {
     _totalPrice = widget.service.price;
   }
 
-  // --- Function to check coupon in Firestore ---
   Future<void> _applyCoupon() async {
-    String couponCode = _couponController.text.trim(); // Already uppercase
+    String couponCode = _couponController.text.trim(); 
     if (couponCode.isEmpty) return;
 
     setState(() {
@@ -50,7 +49,7 @@ class _PaymentPageState extends State<PaymentPage> {
     });
 
     try {
-      // Search the 'coupons' collection for a matching code
+
       final query = await FirebaseFirestore.instance
           .collection('coupons')
           .where('code', isEqualTo: couponCode)
@@ -80,7 +79,7 @@ class _PaymentPageState extends State<PaymentPage> {
         setState(() {
           _discount = discountValue;
           _totalPrice = widget.service.price - _discount;
-          if (_totalPrice < 0) _totalPrice = 0; // Don't let price be negative
+          if (_totalPrice < 0) _totalPrice = 0; 
           _appliedCoupon = couponCode;
         });
 
@@ -129,8 +128,6 @@ class _PaymentPageState extends State<PaymentPage> {
         widget.scheduledTime.hour,
         widget.scheduledTime.minute,
       );
-
-      // Save the order to the user's personal 'orders' subcollection
       await FirebaseFirestore.instance
           .collection('users')
           .doc(user.uid)
@@ -232,8 +229,6 @@ class _PaymentPageState extends State<PaymentPage> {
             ),
           ),
           const SizedBox(height: 24),
-
-          // --- COUPON CODE SECTION ---
           _buildSectionHeader(textTheme, 'Coupon Code'),
           Card(
             child: Padding(
@@ -243,11 +238,9 @@ class _PaymentPageState extends State<PaymentPage> {
                   Expanded(
                     child: TextField(
                       controller: _couponController,
-                      // --- THIS FORCES THE TEXT TO BE UPPERCASE ---
                       inputFormatters: [
                         UpperCaseTextFormatter(),
                       ],
-                      // This suggests the keyboard type
                       textCapitalization: TextCapitalization.characters,
                       decoration: const InputDecoration(
                         labelText: 'Enter coupon code',
@@ -274,8 +267,6 @@ class _PaymentPageState extends State<PaymentPage> {
               ),
             ),
           ),
-          // --- END OF NEW SECTION ---
-
           const SizedBox(height: 24),
           _buildSectionHeader(textTheme, 'Card Details'),
           Card(
@@ -300,7 +291,6 @@ class _PaymentPageState extends State<PaymentPage> {
                                 const InputDecoration(labelText: 'MM/YY'),
                             keyboardType: TextInputType.datetime,
                             validator: (v) => (v?.isEmpty ?? true) ? 'Required' : null,
-                            // --- THIS ADDS THE "/" AUTOMATICALLY ---
                             inputFormatters: [
                               FilteringTextInputFormatter.digitsOnly,
                               LengthLimitingTextInputFormatter(4),
@@ -383,8 +373,6 @@ class _PaymentPageState extends State<PaymentPage> {
     );
   }
 }
-
-// --- Helper class to format MM/YY input ---
 class ExpiryDateInputFormatter extends TextInputFormatter {
   @override
   TextEditingValue formatEditUpdate(
@@ -410,8 +398,6 @@ class ExpiryDateInputFormatter extends TextInputFormatter {
     );
   }
 }
-
-// --- Helper class to force uppercase input ---
 class UpperCaseTextFormatter extends TextInputFormatter {
   @override
   TextEditingValue formatEditUpdate(

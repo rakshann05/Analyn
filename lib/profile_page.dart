@@ -114,8 +114,6 @@ class _ProfilePageState extends State<ProfilePage> {
                 },
               ),
               const SizedBox(height: 32),
-
-              // --- New Logout Button ---
               _buildLogoutButton(context),
             ],
           ),
@@ -123,8 +121,6 @@ class _ProfilePageState extends State<ProfilePage> {
       },
     );
   }
-
-  // --- New Header Widget ---
   Widget _buildProfileHeader(
       BuildContext context, Map<String, dynamic> userData) {
     return Card(

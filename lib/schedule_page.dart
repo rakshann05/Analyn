@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:intl/intl.dart'; // <-- THIS LINE FIXES THE ERROR
+import 'package:intl/intl.dart'; 
 import 'main.dart';
 import 'payment_page.dart';
 import 'add_address_page.dart';
@@ -20,7 +20,7 @@ class _SchedulePageState extends State<SchedulePage> {
   DateTime? _selectedDate;
   TimeOfDay? _selectedTime;
   String? _selectedAddressId;
-  String _selectedAddressText = ''; // To store the text of the selected address
+  String _selectedAddressText = '';
 
   Future<void> _selectDate(BuildContext context) async {
     final DateTime? picked = await showDatePicker(
@@ -29,11 +29,10 @@ class _SchedulePageState extends State<SchedulePage> {
       firstDate: DateTime.now(),
       lastDate: DateTime.now().add(const Duration(days: 30)),
       builder: (context, child) {
-        // Style the date picker to match the theme
         return Theme(
           data: ThemeData.light().copyWith(
             colorScheme: const ColorScheme.light(
-              primary: AppTheme.accent, // Gold accent
+              primary: AppTheme.accent,
             ),
             dialogBackgroundColor: AppTheme.background,
           ),
@@ -51,11 +50,10 @@ class _SchedulePageState extends State<SchedulePage> {
       context: context,
       initialTime: TimeOfDay.now(),
       builder: (context, child) {
-        // Style the time picker to match the theme
         return Theme(
           data: ThemeData.light().copyWith(
             colorScheme: const ColorScheme.light(
-              primary: AppTheme.accent, // Gold accent
+              primary: AppTheme.accent, 
             ),
             dialogBackgroundColor: AppTheme.background,
           ),
@@ -76,7 +74,7 @@ class _SchedulePageState extends State<SchedulePage> {
         _selectedAddressId != null;
 
     return Scaffold(
-      backgroundColor: AppTheme.background, // Apply theme background
+      backgroundColor: AppTheme.background, 
       appBar: AppBar(
         title: Text('Schedule Appointment', style: AppTheme.textTheme.headlineMedium),
         backgroundColor: AppTheme.background,
@@ -89,7 +87,6 @@ class _SchedulePageState extends State<SchedulePage> {
             child: ListView(
               padding: const EdgeInsets.all(16.0),
               children: [
-                // --- Service Summary Card ---
                 Card(
                   child: Padding(
                     padding: const EdgeInsets.all(12.0),
@@ -124,7 +121,6 @@ class _SchedulePageState extends State<SchedulePage> {
                   ),
                 ),
                 const SizedBox(height: 24),
-                // --- Date & Time Section ---
                 _buildSectionHeader('Select Date & Time'),
                 Card(
                   child: Column(
@@ -162,7 +158,6 @@ class _SchedulePageState extends State<SchedulePage> {
                   ),
                 ),
                 const SizedBox(height: 24),
-                // --- Address Section ---
                 _buildSectionHeader('Select Address'),
                 StreamBuilder<QuerySnapshot>(
                   stream: FirebaseFirestore.instance
@@ -196,7 +191,7 @@ class _SchedulePageState extends State<SchedulePage> {
                               groupValue: _selectedAddressId,
                               onChanged: (value) => setState(() {
                                 _selectedAddressId = value;
-                                _selectedAddressText = fullAddress; // Store the address text
+                                _selectedAddressText = fullAddress; 
                               }),
                               activeColor: AppTheme.accent,
                             );
@@ -209,10 +204,8 @@ class _SchedulePageState extends State<SchedulePage> {
                                 style: AppTheme.textTheme.bodyLarge
                                     ?.copyWith(color: AppTheme.accent)),
                             onTap: () async {
-                              // Wait for the page to pop, then check for new addresses
                               await Navigator.of(context).push(MaterialPageRoute(
                                   builder: (context) => const AddAddressPage()));
-                              // No need to call setState, StreamBuilder will update automatically
                             },
                           ),
                         ],
@@ -223,14 +216,12 @@ class _SchedulePageState extends State<SchedulePage> {
               ],
             ),
           ),
-          // --- Continue Button ---
           Container(
             padding: const EdgeInsets.all(16.0),
-            color: AppTheme.background, // Ensure button bg matches
+            color: AppTheme.background, 
             child: ElevatedButton(
               onPressed: canContinue
                   ? () {
-                      // We already saved the address text when the user tapped the radio button
                       Navigator.of(context).push(
                         MaterialPageRoute(
                           builder: (context) => PaymentPage(
@@ -242,7 +233,7 @@ class _SchedulePageState extends State<SchedulePage> {
                         ),
                       );
                     }
-                  : null, // Button is disabled if not all options are selected
+                  : null, 
               child: const Text('Continue'),
             ),
           ),
@@ -250,8 +241,6 @@ class _SchedulePageState extends State<SchedulePage> {
       ),
     );
   }
-
-  // Helper widget for section headers
   Widget _buildSectionHeader(String title) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 12.0),

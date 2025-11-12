@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'app_theme.dart'; // Import your theme
+import 'app_theme.dart';
 
 class EditProfilePage extends StatefulWidget {
   final Map<String, dynamic> userData;
@@ -24,7 +24,6 @@ class _EditProfilePageState extends State<EditProfilePage> {
     super.initState();
     _nameController = TextEditingController(text: widget.userData['name']);
     _phoneController = TextEditingController(text: widget.userData['phone']);
-    // Initialize email controller from user data
     _emailController = TextEditingController(text: widget.userData['email']);
   }
 
