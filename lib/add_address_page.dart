@@ -1,8 +1,7 @@
-// lib/add_address_page.dart
-
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'app_theme.dart'; 
 
 class AddAddressPage extends StatefulWidget {
   const AddAddressPage({super.key});
@@ -28,7 +27,6 @@ class _AddAddressPageState extends State<AddAddressPage> {
       final user = FirebaseAuth.instance.currentUser;
       if (user == null) throw Exception('User not logged in.');
 
-      // We'll store addresses in a subcollection under the user's document
       await FirebaseFirestore.instance
           .collection('users')
           .doc(user.uid)
@@ -59,6 +57,7 @@ class _AddAddressPageState extends State<AddAddressPage> {
 
   @override
   Widget build(BuildContext context) {
+    // Note: This page uses the default AppBar theme
     return Scaffold(
       appBar: AppBar(
         title: const Text('Add New Address'),
@@ -72,26 +71,26 @@ class _AddAddressPageState extends State<AddAddressPage> {
             children: [
               TextFormField(
                 controller: _addressController,
-                decoration: const InputDecoration(labelText: 'Full Address (Street, House No.)', border: OutlineInputBorder()),
+                decoration: const InputDecoration(labelText: 'Full Address (Street, House No.)'),
                 validator: (value) => value!.isEmpty ? 'Please enter your full address' : null,
               ),
               const SizedBox(height: 16),
               TextFormField(
                 controller: _cityController,
-                decoration: const InputDecoration(labelText: 'City', border: OutlineInputBorder()),
+                decoration: const InputDecoration(labelText: 'City'),
                 validator: (value) => value!.isEmpty ? 'Please enter your city' : null,
               ),
               const SizedBox(height: 16),
               TextFormField(
                 controller: _postalCodeController,
-                decoration: const InputDecoration(labelText: 'Postal Code', border: OutlineInputBorder()),
+                decoration: const InputDecoration(labelText: 'Postal Code'),
                 keyboardType: TextInputType.number,
                 validator: (value) => value!.isEmpty ? 'Please enter your postal code' : null,
               ),
               const SizedBox(height: 24),
               DropdownButtonFormField<String>(
                 value: _addressType,
-                decoration: const InputDecoration(labelText: 'Address Type', border: OutlineInputBorder()),
+                decoration: const InputDecoration(labelText: 'Address Type', border: UnderlineInputBorder()),
                 items: ['Home', 'Work', 'Other'].map((String value) {
                   return DropdownMenuItem<String>(
                     value: value,
@@ -107,10 +106,9 @@ class _AddAddressPageState extends State<AddAddressPage> {
               const SizedBox(height: 32),
               ElevatedButton(
                 onPressed: _isLoading ? null : _saveAddress,
-                style: ElevatedButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 16)),
                 child: _isLoading
                     ? const CircularProgressIndicator(color: Colors.white)
-                    : const Text('Save Address', style: TextStyle(fontSize: 18)),
+                    : const Text('Save Address'),
               ),
             ],
           ),

@@ -1,9 +1,7 @@
-// lib/main_scaffold.dart
-
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'services_page.dart';
-import 'orders_page.dart';
+import 'bookings_page.dart'; 
 import 'profile_page.dart';
 import 'support_page.dart';
 import 'app_theme.dart';
@@ -18,7 +16,6 @@ class MainScaffold extends StatefulWidget {
 class _MainScaffoldState extends State<MainScaffold> {
   int _selectedIndex = 0;
 
-  // --- NEW: List of page titles for the AppBar ---
   static const List<String> _pageTitles = [
     'Our Services',
     'My Bookings',
@@ -31,11 +28,10 @@ class _MainScaffoldState extends State<MainScaffold> {
   @override
   void initState() {
     super.initState();
-    // Pass the logout function to the ProfilePage
     _widgetOptions = <Widget>[
       ServicesPage(),
-      const OrdersPage(),
-      ProfilePage(onLogout: _handleLogout), // Pass the function here
+      const BookingsPage(), 
+      ProfilePage(onLogout: _handleLogout),
       const SupportPage(),
     ];
   }
@@ -46,16 +42,13 @@ class _MainScaffoldState extends State<MainScaffold> {
     });
   }
 
-  // --- NEW: Logout logic is now handled here ---
   Future<void> _handleLogout() async {
     await FirebaseAuth.instance.signOut();
-    // The StreamBuilder in main.dart will automatically navigate to the login page.
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      // --- NEW: A single, consistent AppBar ---
       appBar: AppBar(
         title: Text(_pageTitles[_selectedIndex]),
       ),

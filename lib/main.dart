@@ -1,18 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:firebase_dynamic_links/firebase_dynamic_links.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-
-// Import dotenv
 import 'package:flutter_dotenv/flutter_dotenv.dart';
-
 import 'login_page.dart';
 import 'startup_page.dart';
 import 'app_theme.dart';
 import 'main_scaffold.dart';
-import 'firebase_options.dart'; // Import your new options file
-
+import 'firebase_options.dart';
 class Service {
   final int id;
   final String name;
@@ -31,17 +25,25 @@ class Service {
   });
 }
 
-void main() async {
+Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  
-  // Load .env file FIRST
-  await dotenv.load(fileName: ".env");
 
-  // Initialize Firebase SECOND, using the options
-  await Firebase.initializeApp(
-    options: DefaultFirebaseOptions.currentPlatform,
-  );
-  
+  // load env
+  await dotenv.load(fileName: ".env");
+  try {
+    if (Firebase.apps.isEmpty) {
+      await Firebase.initializeApp(
+        options: DefaultFirebaseOptions.currentPlatform,
+      );
+    } else {
+      await Firebase.app();
+    }
+  } on FirebaseException catch (e) {
+    if (e.code != 'duplicate-app') {
+      rethrow;
+    }
+  }
+
   runApp(const MyApp());
 }
 
@@ -73,42 +75,12 @@ class _AuthWrapperState extends State<AuthWrapper> {
   void initState() {
     super.initState();
     Future.delayed(const Duration(seconds: 3), () {
-      if (mounted) setState(() { _showStartup = false; });
-    });
-    _initDynamicLinks();
-  }
-
-  Future<void> _initDynamicLinks() async {
-    FirebaseDynamicLinks.instance..listen((dynamicLink) async {
-      final Uri deepLink = dynamicLink.link;
-      _handleLink(deepLink);
-    }).onError((error) {
-      
-    });
-
-    final PendingDynamicLinkData? data = await FirebaseDynamicLinks.instance.getInitialLink();
-    final Uri? deepLink = data?.link;
-    if (deepLink != null) {
-      _handleLink(deepLink);
-    }
-  }
-
-  Future<void> _handleLink(Uri link) async {
-    if (_auth.isSignInWithEmailLink(link.toString())) {
-      try {
-        final prefs = await SharedPreferences.getInstance();
-        final email = prefs.getString('emailForSignIn');
-        if (email != null) {
-          await _auth.signInWithEmailLink(
-            email: email,
-            emailLink: link.toString(),
-          );
-          await prefs.remove('emailForSignIn');
-        }
-      } catch (e) {
-        
+      if (mounted) {
+        setState(() {
+          _showStartup = false;
+        });
       }
-    }
+    });
   }
 
   @override
@@ -121,13 +93,15 @@ class _AuthWrapperState extends State<AuthWrapper> {
       stream: _auth.authStateChanges(),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Scaffold(body: Center(child: CircularProgressIndicator()));
+          return const Scaffold(
+            body: Center(child: CircularProgressIndicator()),
+          );
         }
 
-        if (snapshot.hasData && snapshot.data!.emailVerified) {
+        if (snapshot.hasData) {
           return const MainScaffold();
         }
-        
+
         return const LoginPage();
       },
     );
