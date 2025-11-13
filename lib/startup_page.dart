@@ -1,31 +1,30 @@
-// lib/startup_page.dart
-
 import 'package:flutter/material.dart';
+import 'app_theme.dart'; // Import your new theme
 
 class StartupPage extends StatelessWidget {
   const StartupPage({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return const Scaffold(
-      backgroundColor: Colors.blueAccent, // Or your brand's primary color
+    return Scaffold(
+      // Use the Ivory White background from your theme
+      backgroundColor: AppTheme.background,
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             // You can replace this with your actual logo
             Icon(
-              Icons.spa, // Placeholder for a spa/wellness logo
+              Icons.spa_outlined, // A slightly more elegant icon
               size: 100,
-              color: Colors.white,
+              color: AppTheme.accent, // Use your Gold accent color
             ),
-            SizedBox(height: 20),
+            const SizedBox(height: 20),
             Text(
               'Analyn',
-              style: TextStyle(
-                fontSize: 40,
-                fontWeight: FontWeight.bold,
-                color: Colors.white,
+              // Use the Poppins Bold font from your theme
+              style: AppTheme.textTheme.displayLarge?.copyWith(
+                color: AppTheme.darkText, // Use your Charcoal text color
               ),
             ),
           ],

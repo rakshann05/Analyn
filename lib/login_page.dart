@@ -32,14 +32,21 @@ class _LoginPageState extends State<LoginPage> {
         password: _passwordController.text.trim(),
       );
 
+      // Check for email verification
       if (userCredential.user != null && !userCredential.user!.emailVerified) {
-        setState(() {
-          _errorMessage = 'Email not verified. Please check your inbox.';
-        });
+        // Send a new link and sign out
+        await userCredential.user!.sendEmailVerification();
         await _auth.signOut();
+        setState(() {
+          _errorMessage =
+              'Email not verified. A new verification link has been sent to your email. Please verify and log in again.';
+        });
       }
+      // If successful, the StreamBuilder in main.dart will handle navigation
     } on FirebaseAuthException catch (e) {
-      if (e.code == 'user-not-found' || e.code == 'wrong-password' || e.code == 'invalid-credential') {
+      if (e.code == 'user-not-found' ||
+          e.code == 'wrong-password' ||
+          e.code == 'invalid-credential') {
         _errorMessage = 'Invalid email or password.';
       } else {
         _errorMessage = 'An error occurred. Please try again.';
@@ -50,6 +57,32 @@ class _LoginPageState extends State<LoginPage> {
           _isLoading = false;
         });
       }
+    }
+  }
+
+  Future<void> _sendPasswordReset() async {
+    if (_emailController.text.trim().isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+            content: Text('Please enter your email address to reset password.')),
+      );
+      return;
+    }
+    try {
+      await _auth.sendPasswordResetEmail(email: _emailController.text.trim());
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Password reset link sent to your email.'),
+          backgroundColor: Colors.black,
+        ),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Failed to send reset link: ${e.toString()}'),
+          backgroundColor: Colors.red,
+        ),
+      );
     }
   }
 
@@ -88,7 +121,13 @@ class _LoginPageState extends State<LoginPage> {
                   const SizedBox(height: 48),
                   TextFormField(
                     controller: _emailController,
-                    decoration: const InputDecoration(labelText: 'Email'),
+                    decoration: const InputDecoration(
+                      labelText: 'Email',
+                      // --- THIS IS THE CHANGE ---
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.all(Radius.circular(12)),
+                      ),
+                    ),
                     keyboardType: TextInputType.emailAddress,
                     validator: (value) =>
                         value!.isEmpty || !value.contains('@')
@@ -98,12 +137,30 @@ class _LoginPageState extends State<LoginPage> {
                   const SizedBox(height: 20),
                   TextFormField(
                     controller: _passwordController,
-                    decoration: const InputDecoration(labelText: 'Password'),
+                    decoration: const InputDecoration(
+                      labelText: 'Password',
+                      // --- THIS IS THE CHANGE ---
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.all(Radius.circular(12)),
+                      ),
+                    ),
                     obscureText: true,
                     validator: (value) =>
                         value!.isEmpty ? 'Please enter your password' : null,
                   ),
-                  const SizedBox(height: 32),
+                  // --- THIS IS THE NEW WIDGET ---
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: TextButton(
+                      onPressed: _sendPasswordReset,
+                      child: Text(
+                        'Forgot Password?',
+                        style: AppTheme.textTheme.bodyMedium
+                            ?.copyWith(color: AppTheme.accent),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 24),
                   if (_errorMessage != null)
                     Padding(
                       padding: const EdgeInsets.only(bottom: 16.0),

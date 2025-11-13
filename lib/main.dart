@@ -7,6 +7,8 @@ import 'startup_page.dart';
 import 'app_theme.dart';
 import 'main_scaffold.dart';
 import 'firebase_options.dart';
+import 'welcome_page.dart';
+
 class Service {
   final int id;
   final String name;
@@ -28,7 +30,6 @@ class Service {
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // load env
   await dotenv.load(fileName: ".env");
   try {
     if (Firebase.apps.isEmpty) {
@@ -102,7 +103,7 @@ class _AuthWrapperState extends State<AuthWrapper> {
           return const MainScaffold();
         }
 
-        return const LoginPage();
+        return const WelcomePage();
       },
     );
   }
