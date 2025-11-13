@@ -1,9 +1,8 @@
-// lib/signup_page.dart
-
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:country_code_picker/country_code_picker.dart';
+import 'app_theme.dart';
 
 class SignupPage extends StatefulWidget {
   const SignupPage({super.key});
@@ -38,7 +37,6 @@ class _SignupPageState extends State<SignupPage> {
       if (userCredential.user != null) {
         final String fullPhoneNumber = _countryCode + _phoneController.text.trim();
 
-        // Address field is no longer saved
         await _firestore.collection('users').doc(userCredential.user!.uid).set({
           'name': _nameController.text.trim(),
           'email': _emailController.text.trim(),
@@ -78,8 +76,16 @@ class _SignupPageState extends State<SignupPage> {
 
   @override
   Widget build(BuildContext context) {
+    final textTheme = Theme.of(context).textTheme;
+
     return Scaffold(
-      appBar: AppBar(title: const Text('Create Account')),
+      backgroundColor: AppTheme.background,
+      appBar: AppBar(
+        title: Text('Create Account', style: textTheme.headlineMedium),
+        backgroundColor: AppTheme.background,
+        elevation: 0,
+        foregroundColor: AppTheme.darkText,
+      ),
       body: Center(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(24.0),
@@ -88,16 +94,38 @@ class _SignupPageState extends State<SignupPage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                const Text('Join Analyn', style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold), textAlign: TextAlign.center),
+                Text(
+                  'Join Analyn',
+                  style: textTheme.displayLarge,
+                  textAlign: TextAlign.center,
+                ),
                 const SizedBox(height: 40),
-                TextFormField(controller: _nameController, decoration: const InputDecoration(labelText: 'Full Name', border: OutlineInputBorder()), validator: (v) => v!.isEmpty ? 'Required' : null),
+                TextFormField(
+                  controller: _nameController,
+                  decoration: const InputDecoration(
+                    labelText: 'Full Name',
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.all(Radius.circular(12)),
+                    ),
+                  ),
+                  validator: (v) => v!.isEmpty ? 'Required' : null,
+                ),
                 const SizedBox(height: 16),
-                TextFormField(controller: _emailController, decoration: const InputDecoration(labelText: 'Email Address', border: OutlineInputBorder()), validator: (v) => v!.isEmpty || !v.contains('@') ? 'Invalid Email' : null),
+                TextFormField(
+                  controller: _emailController,
+                  decoration: const InputDecoration(
+                    labelText: 'Email Address',
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.all(Radius.circular(12)),
+                    ),
+                  ),
+                  validator: (v) => v!.isEmpty || !v.contains('@') ? 'Invalid Email' : null,
+                ),
                 const SizedBox(height: 16),
                 Container(
                   decoration: BoxDecoration(
-                    border: Border.all(color: Colors.grey),
-                    borderRadius: BorderRadius.circular(4.0),
+                    border: Border.all(color: AppTheme.lightText.withOpacity(0.5)),
+                    borderRadius: BorderRadius.circular(12.0),
                   ),
                   child: Row(
                     children: [
@@ -108,16 +136,18 @@ class _SignupPageState extends State<SignupPage> {
                           });
                         },
                         initialSelection: 'IN',
-                        favorite: const ['+91','US'],
+                        favorite: const ['+91', 'US'],
+                        padding: const EdgeInsets.symmetric(horizontal: 8),
                       ),
+                      Container(height: 40, width: 1, color: AppTheme.lightText.withOpacity(0.5)),
                       Expanded(
                         child: TextFormField(
                           controller: _phoneController,
                           keyboardType: TextInputType.phone,
                           decoration: const InputDecoration(
-                            labelText: 'Phone Number',
+                            hintText: 'Phone Number',
                             border: InputBorder.none,
-                            contentPadding: EdgeInsets.symmetric(vertical: 15.0, horizontal: 10.0),
+                            contentPadding: EdgeInsets.symmetric(horizontal: 16.0),
                           ),
                           validator: (v) => v!.length < 10 ? 'Invalid Number' : null,
                         ),
@@ -126,12 +156,23 @@ class _SignupPageState extends State<SignupPage> {
                   ),
                 ),
                 const SizedBox(height: 16),
-                TextFormField(controller: _passwordController, obscureText: true, decoration: const InputDecoration(labelText: 'Password', border: OutlineInputBorder()), validator: (v) => v!.length < 6 ? 'Password must be at least 6 characters' : null),
+                TextFormField(
+                  controller: _passwordController,
+                  obscureText: true,
+                  decoration: const InputDecoration(
+                    labelText: 'Password',
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.all(Radius.circular(12)),
+                    ),
+                  ),
+                  validator: (v) => v!.length < 6 ? 'Password must be at least 6 characters' : null,
+                ),
                 const SizedBox(height: 30),
                 ElevatedButton(
                   onPressed: _isLoading ? null : _signupWithEmailPassword,
-                  style: ElevatedButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 16)),
-                  child: _isLoading ? const CircularProgressIndicator(color: Colors.white) : const Text('Create Account'),
+                  child: _isLoading
+                      ? const CircularProgressIndicator(color: Colors.white)
+                      : const Text('Create Account'),
                 ),
               ],
             ),
