@@ -1,12 +1,9 @@
-// lib/services_page.dart
-
 import 'package:flutter/material.dart';
 import 'main.dart';
 import 'info_page.dart';
 import 'app_theme.dart';
 
 class ServicesPage extends StatelessWidget {
-  // The onLogout callback is no longer needed here as it's handled by the MainScaffold
   ServicesPage({super.key});
 
   final List<Service> services = [
@@ -66,8 +63,6 @@ class ServicesPage extends StatelessWidget {
     );
   }
 }
-
-// --- THIS IS THE MISSING WIDGET CODE ---
 class _ServiceCard extends StatelessWidget {
   final Service service;
   final VoidCallback onTap;
